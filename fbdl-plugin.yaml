@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: fbdl-plugin
+  labels:
+    app: fbdl-plugin
+spec:
+  selector:
+    matchLabels:
+      app: fbdl-plugin
+  template:
+    metadata:
+      labels:
+        app: fbdl-plugin
+    spec:
+      containers:
+      - name: fbdl-plugin
+        image: fbdl.com/fbdl-plugin:v1
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: dev-mem
+          mountPath: /dev/mem
+          readOnly: true
+        - name: kubeletsockets
+          mountPath: /var/lib/kubelet/device-plugins
+      volumes:
+      - name: dev-mem
+        hostPath:
+          path: /dev/mem
+      - name: kubeletsockets
+        hostPath:
+          path: /var/lib/kubelet/device-plugins
