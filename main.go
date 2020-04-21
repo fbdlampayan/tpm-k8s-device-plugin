@@ -67,6 +67,7 @@ func (dp *devicePlugin) scan() (dpapi.DeviceTree, error) {
     
     fmt.Printf("adding %s with id %s", dp.devfsDir, devID)
     devTree.AddDevice("yellow", devID, dpapi.NewDeviceInfo(pluginapi.Healthy, nodes, nil, nil))
+    devTree.AddDevice("red", "id2", dpapi.NewDeviceInfo(pluginapi.Healthy, nodes, nil, nil))
 
     return devTree, nil
 }
