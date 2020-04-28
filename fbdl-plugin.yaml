@@ -23,12 +23,18 @@ spec:
         - name: dev-mem
           mountPath: /dev/tpmrm0
           readOnly: true
+        - name: dev-tpm
+          mountPath: /dev/tpm
+          readOnly: true
         - name: kubeletsockets
           mountPath: /var/lib/kubelet/device-plugins
       volumes:
       - name: dev-mem
         hostPath:
           path: /dev/tpmrm0
+      - name: dev-tpm
+        hostPath:
+          path: /dev/tpm
       - name: kubeletsockets
         hostPath:
           path: /var/lib/kubelet/device-plugins
