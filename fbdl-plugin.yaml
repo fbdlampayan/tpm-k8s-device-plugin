@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: fbdl-plugin
-        image: fbdlampayan/fbdl-plugin:v1
+        image: fbdlampayan/fbdl-plugin:v2
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
