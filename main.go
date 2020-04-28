@@ -12,7 +12,7 @@ import (
 
 const (
     devfsDriDirectory  = "/dev/tpmrm0"
-    devTpmFsDirectory = "/dev/tpm"
+    devTpmFsDirectory = "/dev/tpm0"
 
     namespace = "color.example.com"
 )

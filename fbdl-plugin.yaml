@@ -24,7 +24,7 @@ spec:
           mountPath: /dev/tpmrm0
           readOnly: true
         - name: dev-tpm
-          mountPath: /dev/tpm
+          mountPath: /dev/tpm0
           readOnly: true
         - name: kubeletsockets
           mountPath: /var/lib/kubelet/device-plugins
@@ -34,7 +34,7 @@ spec:
           path: /dev/tpmrm0
       - name: dev-tpm
         hostPath:
-          path: /dev/tpm
+          path: /dev/tpm0
       - name: kubeletsockets
         hostPath:
           path: /var/lib/kubelet/device-plugins
