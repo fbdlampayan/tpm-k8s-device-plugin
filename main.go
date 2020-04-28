@@ -11,7 +11,7 @@ import (
 )
 
 const (
-    devfsDriDirectory  = "/dev/mem"
+    devfsDriDirectory  = "/dev/tpmrm0"
 
     namespace = "color.example.com"
 )

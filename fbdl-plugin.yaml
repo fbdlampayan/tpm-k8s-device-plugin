@@ -21,14 +21,14 @@ spec:
           privileged: true
         volumeMounts:
         - name: dev-mem
-          mountPath: /dev/mem
+          mountPath: /dev/tpmrm0
           readOnly: true
         - name: kubeletsockets
           mountPath: /var/lib/kubelet/device-plugins
       volumes:
       - name: dev-mem
         hostPath:
-          path: /dev/mem
+          path: /dev/tpmrm0
       - name: kubeletsockets
         hostPath:
           path: /var/lib/kubelet/device-plugins
