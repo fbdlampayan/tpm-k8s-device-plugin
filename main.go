@@ -91,9 +91,11 @@ func (dp *devicePlugin) scan() (dpapi.DeviceTree, error) {
     devID := "id1";
     fmt.Printf("adding %s with id %s", dp.devfsDir, devID)
     devTree.AddDevice("yellow", devID, dpapi.NewDeviceInfo(pluginapi.Healthy, nodes, nil, nil))
+    devTree.AddDevice("blue", devID, dpapi.NewDeviceInfo(pluginapi.Healthy, nodes, nil, nil))
 
     fmt.Print("adding %s with id %s", dp.tpmFsDir, devID)
     devTree.AddDevice("red", "id2", dpapi.NewDeviceInfo(pluginapi.Healthy, tpmNodes, nil, nil))
+    devTree.AddDevice("green", "id2", dpapi.NewDeviceInfo(pluginapi.Healthy, tpmNodes, nil, nil))
 
     return devTree, nil
 }
