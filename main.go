@@ -57,6 +57,7 @@ func (dp *devicePlugin) scan() (dpapi.DeviceTree, error) {
         return nil, errors.Wrap(err, "Permission denied /dev/mem")
     }
 
+    fmt.Printf("attempting to read %s\n", dp.tpmFsDir)
     _, er := os.Stat(dp.tpmFsDir)
     if er == nil {
         fmt.Printf("file %s exists\n", dp.tpmFsDir)
