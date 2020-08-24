@@ -21,7 +21,7 @@ spec:
       name: sample-user
     spec:
       containers:
-      - image: sample.user.image:v1
+      - image: # image of a consuming container/microservice, example: sample.user.image:v1
         securityContext:
             capabilities:
                 add: ["SYS_RAWIO"] #taken from https://github.com/torvalds/linux/blob/master/include/uapi/linux/capability.h

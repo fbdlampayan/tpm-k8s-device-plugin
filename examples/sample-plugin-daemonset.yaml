@@ -15,26 +15,20 @@ spec:
     spec:
       containers:
       - name: fbdl-plugin
-        image: fbdlampayan/fbdl-plugin:v2
+        image: #image of deployed device plugin, example: your.image:v1
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
         volumeMounts:
-        - name: dev-mem
+        - name: dev-tpmrm
           mountPath: /dev/tpmrm0
-          readOnly: true
-        - name: dev-tpm
-          mountPath: /dev/tpm0
           readOnly: true
         - name: kubeletsockets
           mountPath: /var/lib/kubelet/device-plugins
       volumes:
-      - name: dev-mem
+      - name: dev-tpmrm
         hostPath:
           path: /dev/tpmrm0
-      - name: dev-tpm
-        hostPath:
-          path: /dev/tpm0
       - name: kubeletsockets
         hostPath:
           path: /var/lib/kubelet/device-plugins
