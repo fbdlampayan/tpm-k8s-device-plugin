@@ -25,19 +25,16 @@ const (
 )
 
 type devicePlugin struct {
-	devHostDir string
-
+    devHostDir string
     sharedCapacity int
-
     tpmrmDeviceReg *regexp.Regexp
-
     scanTicker *time.Ticker
     scanDone chan bool
 }
 
 func newDevicePlugin(devHostDirectory string, capacity int) *devicePlugin {
 	return &devicePlugin{
-		devHostDir:       devHostDirectory,
+        devHostDir:       devHostDirectory,
         sharedCapacity:   capacity,
         tpmrmDeviceReg:   regexp.MustCompile(tpmRmDeviceRegex),
         scanTicker:       time.NewTicker(scanPeriod),
@@ -68,7 +65,7 @@ func (dp *devicePlugin) Scan(notifier dpapi.Notifier) error {
             return nil
         case <-dp.scanTicker.C:
         }
-	}
+    }
 }
 
 func (dp *devicePlugin) scan() (dpapi.DeviceTree, error) {
