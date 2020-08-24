@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: fbdl-plugin
-        image: #image of deployed device plugin, example: your.image:v1
+        image: #image of deployed device plugin, example: fbdl.plugin.image:v1
         imagePullPolicy: IfNotPresent
         securityContext:
           privileged: true
