@@ -4,6 +4,10 @@ import (
     "fmt"
     "time"
     "os"
+    "path"
+    "flag"
+    "regexp"
+    "io/ioutil"
     "github.com/pkg/errors"
 
     pluginapi "k8s.io/kubelet/pkg/apis/deviceplugin/v1beta1"
@@ -11,100 +15,112 @@ import (
 )
 
 const (
-    devfsDriDirectory  = "/dev/tpmrm0"
-    devTpmFsDirectory = "/dev/tpm0"
+    devicesHostDirectory  = "/dev"
+    tpmRmDeviceRegex = `^tpmrm[0-9]*$`
 
-    namespace = "color.example.com"
+    namespace = "fbdl.device.com"
+    deviceType = "tpmrm"
+
+    scanPeriod = 5 * time.Second
 )
 
 type devicePlugin struct {
-	devfsDir string
-    tpmFsDir string
+	devHostDir string
+
+    sharedCapacity int
+
+    tpmrmDeviceReg *regexp.Regexp
+
+    scanTicker *time.Ticker
+    scanDone chan bool
 }
 
-func newDevicePlugin(devfsDir string, tpmFsDir string) *devicePlugin {
+func newDevicePlugin(devHostDirectory string, capacity int) *devicePlugin {
 	return &devicePlugin{
-		devfsDir:         devfsDir,
-        tpmFsDir:         tpmFsDir,
+		devHostDir:       devHostDirectory,
+        sharedCapacity:   capacity,
+        tpmrmDeviceReg:   regexp.MustCompile(tpmRmDeviceRegex),
+        scanTicker:       time.NewTicker(scanPeriod),
+        scanDone:         make(chan bool, 1),
 	}
 }
 
 func (dp *devicePlugin) Scan(notifier dpapi.Notifier) error {
+    defer dp.scanTicker.Stop()
+    var previouslyFound int = -1
+
 	for {
 		devTree, err := dp.scan()
 		if err != nil {
 			fmt.Errorf("Failed to scan: %s", err)
 		}
 
+        found := len(devTree)
+        if found != previouslyFound {
+            fmt.Printf("TPM scan update: devices found: %d\n", found)
+            previouslyFound = found
+        }
+
 		notifier.Notify(devTree)
 
-		time.Sleep(5 * time.Second)
+        select {
+        case <-dp.scanDone:
+            return nil
+        case <-dp.scanTicker.C:
+        }
 	}
 }
 
 func (dp *devicePlugin) scan() (dpapi.DeviceTree, error) {
-
-    fmt.Printf("attempting to read %s\n", dp.devfsDir)
-    
-    _, err := os.Stat(dp.devfsDir)
-    if err == nil {
-        fmt.Printf("file %s exists\n", dp.devfsDir)
-    } else if os.IsNotExist(err) {
-        fmt.Printf("file %s not exists\n", dp.devfsDir)
-        return nil, errors.Wrap(err, "Can't read /dev/mem")
-    } else {
-        fmt.Printf("file %s stat error\n: %v", dp.devfsDir, err)
-        return nil, errors.Wrap(err, "Permission denied /dev/mem")
+    files, err := ioutil.ReadDir(dp.devHostDir)
+    if err != nil {
+        return nil, errors.Wrap(err, "Can't read dev directory")
     }
 
-    fmt.Printf("attempting to read %s\n", dp.tpmFsDir)
-    _, er := os.Stat(dp.tpmFsDir)
-    if er == nil {
-        fmt.Printf("file %s exists\n", dp.tpmFsDir)
-    } else if os.IsNotExist(err) {
-        fmt.Printf("file %s not exists\n", dp.tpmFsDir)
-        return nil, errors.Wrap(er, "Can't read /dev/tpm")
-    } else {
-        fmt.Printf("file %s stat error\n: %v", dp.tpmFsDir, er)
-        return nil, errors.Wrap(err, "Permission denied /dev/mem")
-    }
-    
     devTree := dpapi.NewDeviceTree()
-    
-    var nodes []pluginapi.DeviceSpec
-    
-    nodes = append(nodes, pluginapi.DeviceSpec{
-        HostPath: dp.devfsDir,
-        ContainerPath: dp.devfsDir,
-        Permissions:   "rw",
-    })
+    for _, f := range files {
+        var nodes []pluginapi.DeviceSpec
 
-    var tpmNodes  []pluginapi.DeviceSpec
+        if !dp.tpmrmDeviceReg.MatchString(f.Name()) {
+            continue
+        }
 
-    tpmNodes = append(tpmNodes, pluginapi.DeviceSpec{
-        HostPath: dp.tpmFsDir,
-        ContainerPath: dp.tpmFsDir,
-        Permissions:   "rw",
-    })
+        devPath := path.Join(dp.devHostDir, f.Name())
 
+        fmt.Printf("Adding %s to tmprm %s\n", devPath, f.Name())
+        nodes = append(nodes, pluginapi.DeviceSpec{
+            HostPath: devPath,
+            ContainerPath: devPath,
+            Permissions: "rw",
+        })
 
-    devID := "id1";
-    fmt.Printf("adding %s with id %s", dp.devfsDir, devID)
-    devTree.AddDevice("yellow", devID, dpapi.NewDeviceInfo(pluginapi.Healthy, nodes, nil, nil))
-    devTree.AddDevice("blue", devID, dpapi.NewDeviceInfo(pluginapi.Healthy, nodes, nil, nil))
-
-    fmt.Print("adding %s with id %s", dp.tpmFsDir, devID)
-    devTree.AddDevice("red", "id2", dpapi.NewDeviceInfo(pluginapi.Healthy, tpmNodes, nil, nil))
-    devTree.AddDevice("green", "id2", dpapi.NewDeviceInfo(pluginapi.Healthy, tpmNodes, nil, nil))
+        if len(nodes) > 0 {
+            for i := 0; i < dp.sharedCapacity; i++ {
+                devID := fmt.Sprintf("%s-%d", f.Name(), i)
+                fmt.Printf("device ID: %s for device: %+v\n", devID, f)
+                devTree.AddDevice(deviceType, devID, dpapi.NewDeviceInfo(pluginapi.Healthy, nodes, nil, nil))
+            }
+        }
+    }
 
     return devTree, nil
 }
 
 
 func main() {
-    fmt.Println("my device plugin started")
+    var capacityDesired int
 
-    plugin := newDevicePlugin(devfsDriDirectory, devTpmFsDirectory)
+    flag.IntVar(&capacityDesired, "capacity", 1, "number of pods sharing the same tpmrm device file")
+    flag.Parse()
+
+    if capacityDesired < 1 {
+        fmt.Println("capacity must be greater than zero")
+        os.Exit(1)
+    }
+
+    fmt.Println("tpm device plugin started")
+
+    plugin := newDevicePlugin(devicesHostDirectory, capacityDesired)
     manager := dpapi.NewManager(namespace, plugin)
     manager.Run()
 }
