@@ -14,6 +14,7 @@ import (
     dpapi "github.com/intel/intel-device-plugins-for-kubernetes/pkg/deviceplugin"
 )
 
+//adding a comment
 const (
     devicesHostDirectory  = "/dev"
     tpmRmDeviceRegex = `^tpmrm[0-9]*$`
