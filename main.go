@@ -16,7 +16,7 @@ import (
 
 const (
     devicesHostDirectory  = "/dev"
-    tpmRmDeviceRegex = "mem" //`^tpmrm[0-9]*$`
+    tpmRmDeviceRegex = `^tpmrm[0-9]*$`
 
     namespace = "fbdl.device.com"
     deviceType = "tpmrm"
