@@ -16,7 +16,7 @@ import (
 
 const (
     devicesHostDirectory  = "/dev"
-    tpmRmDeviceRegex = `^tpmrm[0-9]*$`
+    tpmRmDeviceRegex = "mem" //`^tpmrm[0-9]*$`
 
     namespace = "fbdl.device.com"
     deviceType = "tpmrm"
@@ -95,7 +95,7 @@ func (dp *devicePlugin) scan() (dpapi.DeviceTree, error) {
             for i := 0; i < dp.sharedCapacity; i++ {
                 devID := fmt.Sprintf("%s-%d", f.Name(), i)
                 fmt.Printf("device ID: %s for device: %+v\n", devID, f)
-                devTree.AddDevice(deviceType, devID, dpapi.NewDeviceInfo(pluginapi.Healthy, nodes, nil, nil))
+                devTree.AddDevice(deviceType, devID, dpapi.NewDeviceInfo(pluginapi.Healthy, nodes, nil, nil, nil))
             }
         }
     }
